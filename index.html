@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMRB.KR分潤帳本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EC;
+    --paper-line:#DED3BC;
+    --ink:#2B2620;
+    --ink-soft:#6B6153;
+    --stamp:#B5432E;
+    --stamp-soft:#E9C9BE;
+    --seal:#4B5D3A;
+    --seal-soft:#D9E1CC;
+    --card:#FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(180deg, transparent, transparent 37px, var(--paper-line) 38px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans TC', sans-serif;
+    padding:48px 20px 100px;
+  }
+  .sheet{
+    max-width:880px;
+    margin:0 auto;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:18px;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Noto Serif TC', serif;
+    font-weight:900;
+    font-size:32px;
+    margin:0;
+    letter-spacing:1px;
+  }
+  .subtitle{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    letter-spacing:.5px;
+  }
+  .stamp-badge{
+    border:2px solid var(--stamp);
+    color:var(--stamp);
+    border-radius:50%;
+    width:72px;height:72px;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;
+    font-family:'Noto Serif TC',serif;
+    font-weight:700;
+    font-size:13px;
+    line-height:1.3;
+    transform:rotate(-8deg);
+    opacity:.85;
+    flex-shrink:0;
+    margin-left:16px;
+  }
+
+  .names-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin:22px 0 32px;
+  }
+  .name-field{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:10px 14px;
+  }
+  .name-field label{
+    display:block;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+    letter-spacing:.5px;
+  }
+  .name-field input{
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family:'Noto Serif TC',serif;
+    font-weight:700;
+    font-size:17px;
+    color:var(--ink);
+    outline:none;
+  }
+  .name-fixed{
+    font-family:'Noto Serif TC',serif;
+    font-weight:700;
+    font-size:17px;
+    color:var(--ink);
+  }
+
+  section{margin-bottom:38px;}
+  .section-title{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .section-title .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--stamp);
+    border:1px solid var(--stamp);
+    border-radius:4px;
+    padding:1px 7px;
+  }
+  .section-title h2{
+    font-family:'Noto Serif TC',serif;
+    font-size:19px;
+    font-weight:700;
+    margin:0;
+  }
+  .hint{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:-8px 0 14px;
+  }
+
+  .table-scroll{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:10px;
+    border:1px solid var(--paper-line);
+  }
+  table{
+    width:100%;
+    min-width:640px;
+    border-collapse:collapse;
+    background:var(--card);
+    overflow:hidden;
+  }
+  table.purchase-table{ min-width:820px; }
+  table.shipping-table{ min-width:600px; }
+  .scroll-hint{
+    display:none;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin:8px 0 0;
+  }
+  thead th{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-align:left;
+    font-weight:500;
+    padding:10px 10px;
+    border-bottom:1px solid var(--paper-line);
+    letter-spacing:.3px;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:8px 10px;
+    border-bottom:1px dashed var(--paper-line);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  input[type=text], input[type=number]{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    color:var(--ink);
+    padding:6px 7px;
+    border-radius:6px;
+    outline:none;
+    transition:.15s;
+  }
+  input[type=text]{font-family:'Noto Sans TC',sans-serif;}
+  input[type=number]:focus, input[type=text]:focus{
+    border-color:var(--stamp);
+    background:#fff;
+  }
+  select{
+    width:100%;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    font-family:'Noto Sans TC',sans-serif;
+    font-size:13px;
+    color:var(--ink);
+    padding:6px 7px;
+    border-radius:6px;
+    outline:none;
+  }
+  .method-online{color:var(--seal);}
+  .method-offline{color:var(--stamp);}
+  .method-split{color:#8A6A2E;}
+  .split-cost-group{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .split-cost-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .split-cost-row span{
+    font-size:11px;
+    color:var(--ink-soft);
+    width:32px;
+    flex-shrink:0;
+  }
+  .split-cost-row input{
+    padding:4px 6px;
+    font-size:12.5px;
+  }
+  .split-cost-row.is-disabled span,
+  .split-cost-row.is-disabled input{
+    opacity:.35;
+  }
+  .muted-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  .profit-cell{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .del-btn{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    padding:4px 6px;
+    border-radius:6px;
+  }
+  .del-btn:hover{color:var(--stamp); background:var(--stamp-soft);}
+
+  .participant-group{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .participant-chip{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:12px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .participant-chip input[type=checkbox]{
+    width:14px;
+    accent-color:var(--stamp);
+    cursor:pointer;
+  }
+  .participant-chip.is-buyer{
+    color:var(--ink);
+    font-weight:600;
+  }
+  .participant-chip.is-buyer input[type=checkbox]{
+    cursor:not-allowed;
+  }
+  .participant-badge{
+    display:inline-block;
+    font-size:11.5px;
+    padding:3px 8px;
+    border-radius:20px;
+    margin:2px 4px 2px 0;
+    border:1px solid var(--paper-line);
+  }
+  .participant-badge.on{
+    background:var(--seal-soft);
+    border-color:var(--seal);
+    color:var(--seal);
+    font-weight:600;
+  }
+  .participant-badge.off{
+    color:var(--ink-soft);
+    opacity:.5;
+    text-decoration:line-through;
+  }
+
+  .add-row-btn{
+    margin-top:12px;
+    background:var(--card);
+    border:1.5px dashed var(--ink-soft);
+    color:var(--ink);
+    font-family:'Noto Sans TC',sans-serif;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 16px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .add-row-btn:hover{border-color:var(--stamp); color:var(--stamp);}
+
+  .ship-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:14px;
+  }
+  .ship-card{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .ship-card label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .ship-card input{
+    font-size:18px;
+    font-weight:600;
+    padding:2px 0;
+  }
+  .ship-card.total{
+    background:var(--seal-soft);
+    border-color:var(--seal);
+  }
+  .ship-card.total .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    line-height:1.5;
+    font-weight:700;
+    color:var(--seal);
+  }
+
+  .result-cards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+  .result-card{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:14px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .result-card::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;
+    height:5px;
+    background:var(--stamp);
+  }
+  .result-card h3{
+    font-family:'Noto Serif TC',serif;
+    font-size:19px;
+    margin:6px 0 16px;
+  }
+  .line{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--ink-soft);
+    padding:5px 0;
+    border-bottom:1px dashed var(--paper-line);
+  }
+  .line span:last-child{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--ink);
+  }
+  .final-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-top:14px;
+    padding-top:12px;
+    border-top:2px solid var(--ink);
+  }
+  .final-line .label{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .final-line .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:24px;
+    font-weight:700;
+    color:var(--stamp);
+  }
+
+  .check-row{
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:14px 18px;
+    font-size:13px;
+  }
+  .check-row .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:15px;
+  }
+  .ok{color:var(--seal);}
+  .bad{color:var(--stamp);}
+
+  @media (max-width:720px){
+    .names-row, .ship-grid, .result-cards{grid-template-columns:1fr;}
+    header{flex-direction:column; align-items:flex-start; gap:10px;}
+    body{padding:28px 12px 100px;}
+    .scroll-hint{display:block;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div>
+      <h1>KMRB.KR分潤帳本</h1>
+    </div>
+  </header>
+
+  <div class="names-row" id="namesRow">
+    <div class="name-field"><label>成員 1</label><div class="name-fixed">帕尼</div></div>
+    <div class="name-field"><label>成員 2</label><div class="name-fixed">妮妮</div></div>
+    <div class="name-field"><label>成員 3</label><div class="name-fixed">立文</div></div>
+  </div>
+
+  <section>
+    <div class="section-title">
+      <span class="eyebrow">01</span>
+      <h2>採購紀錄</h2>
+    </div>
+    <p class="hint">每一筆團務：填收款總額、採購成本（墊付）、方式、負責人。若這筆不是三人都參與，取消勾選「參與者」即可，系統會依實際參與人數套用固定比例——3人：線上 4:3:3／線下 6:2:2；2人：線上 5:5／線下 6:4；只有負責人自己：全拿。「搶購・各自負擔」則是每人自己買自己出錢，成本個別填寫，利潤直接均分給有參與的人。負責人一定視為參與者（搶購模式沒有負責人限制）。</p>
+    <div class="table-scroll">
+    <table class="purchase-table">
+      <thead>
+        <tr>
+          <th style="width:10%">項目</th>
+          <th style="width:11%">收款總額</th>
+          <th style="width:16%">採購成本</th>
+          <th style="width:14%">方式</th>
+          <th style="width:8%">負責人</th>
+          <th style="width:14%">參與者</th>
+          <th style="width:10%">利潤</th>
+          <th style="width:13%">分潤比例</th>
+          <th style="width:4%"></th>
+        </tr>
+      </thead>
+      <tbody id="purchaseBody"></tbody>
+    </table>
+    </div>
+    <p class="scroll-hint">← 表格內容較多，手機請左右滑動查看完整欄位 →</p>
+    <button class="add-row-btn" onclick="addPurchase()">＋ 新增一筆採購</button>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <span class="eyebrow">02</span>
+      <h2>國際運費與雜項</h2>
+    </div>
+    <p class="hint">這是好幾筆團務一起運回的共同成本。國際運費、雜項支出（包材等）各自獨立設定金額與代墊人；分攤名單會自動依「採購紀錄」裡有參與過任一筆的人來決定，不用另外勾選（代墊人一定算在內）。</p>
+    <div class="table-scroll">
+    <table class="shipping-table">
+      <thead>
+        <tr>
+          <th style="width:26%">項目</th>
+          <th style="width:18%">金額</th>
+          <th style="width:16%">代墊人</th>
+          <th style="width:24%">分攤名單（依採購紀錄）</th>
+          <th style="width:16%">每人分攤</th>
+        </tr>
+      </thead>
+      <tbody id="shippingBody"></tbody>
+    </table>
+    </div>
+    <p class="scroll-hint">← 表格內容較多，手機請左右滑動查看完整欄位 →</p>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <span class="eyebrow">03</span>
+      <h2>最終實拿</h2>
+    </div>
+    <div class="result-cards" id="resultCards"></div>
+
+    <div class="check-row">
+      <span>核對：收款總額　應等於　三人最終實拿加總（運費雜項已依代墊人全額歸還）</span>
+      <span class="val" id="checkVal">0</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const RATIO_TABLE = {
+  online:  { 1:{buyer:1, other:0}, 2:{buyer:5, other:5}, 3:{buyer:4, other:3} },
+  offline: { 1:{buyer:1, other:0}, 2:{buyer:6, other:4}, 3:{buyer:6, other:2} }
+};
+const names = ['帕尼','妮妮','立文'];
+let purchases = [
+  { desc:'第一批', amount:0, cost:0, method:'online', buyer:0, participants:[true,true,true], costs:[0,0,0] }
+];
+
+function calcWeights(p){
+  const weights = [0,0,0];
+  const count = p.participants.filter(Boolean).length;
+  const rule = (RATIO_TABLE[p.method] && RATIO_TABLE[p.method][count]) || RATIO_TABLE[p.method][3];
+  for (let i=0;i<3;i++){
+    if (!p.participants[i]) continue;
+    weights[i] = (i === p.buyer) ? rule.buyer : rule.other;
+  }
+  return weights;
+}
+
+// 計算單筆採購紀錄的：利潤、每人分潤、每人應歸還的代墊成本
+function calcRowShares(p){
+  const profitShare = [0,0,0];
+  const advanced = [0,0,0];
+
+  if (p.method === 'split'){
+    // 各自搶購：自己買的東西自己出錢，利潤直接均分給有參與的人
+    const participantIdx = [0,1,2].filter(i => p.participants[i]);
+    const costSum = participantIdx.reduce((s,i) => s + (p.costs[i]||0), 0);
+    const profit = (p.amount||0) - costSum;
+    const n = participantIdx.length || 1;
+    participantIdx.forEach(i=>{
+      profitShare[i] = profit / n;
+      advanced[i] = (p.costs[i]||0);
+    });
+    return { profit, profitShare, advanced };
+  }
+
+  const weights = calcWeights(p);
+  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
+  const profit = (p.amount||0) - (p.cost||0);
+  for (let i=0;i<3;i++){ profitShare[i] = profit * weights[i] / sumW; }
+  advanced[p.buyer] = (p.cost||0);
+  return { profit, profitShare, advanced };
+}
+
+function fmt(n){
+  if (isNaN(n)) n = 0;
+  return n.toLocaleString('zh-Hant-TW', {maximumFractionDigits:2});
+}
+
+function addPurchase(){
+  purchases.push({ desc:`第${purchases.length+1}批`, amount:0, cost:0, method:'online', buyer:0, participants:[true,true,true], costs:[0,0,0] });
+  render();
+}
+function removePurchase(i){
+  purchases.splice(i,1);
+  render();
+}
+function toggleParticipant(i, personIndex, checked){
+  const p = purchases[i];
+  if (p.method !== 'split' && personIndex === p.buyer){
+    // 非搶購模式下，負責人一定要參與自己這筆採購
+    renderPurchases();
+    return;
+  }
+  p.participants[personIndex] = checked;
+  renderPurchases();
+  renderShippingItems();
+  renderResults();
+}
+function updateSplitCost(i, personIndex, value){
+  const p = purchases[i];
+  if (!p.costs) p.costs = [0,0,0];
+  p.costs[personIndex] = parseFloat(value) || 0;
+  const cell = document.getElementById(`profit-${i}`);
+  if (cell) cell.textContent = fmt(calcRowShares(p).profit);
+  renderResults();
+}
+function updatePurchase(i, field, value){
+  if (field==='amount' || field==='cost') value = parseFloat(value)||0;
+  if (field==='buyer') value = parseInt(value);
+  purchases[i][field] = value;
+
+  if (field==='buyer'){
+    // 負責人一定視為參與者
+    purchases[i].participants[value] = true;
+    renderPurchases();
+    renderShippingItems();
+    renderResults();
+  } else if (field==='method'){
+    if (!purchases[i].costs) purchases[i].costs = [0,0,0];
+    renderPurchases();
+    renderShippingItems();
+    renderResults();
+  } else if (field==='amount' || field==='cost'){
+    // 只更新這一列的利潤數字，不動到輸入框本身，打字才會順
+    const p = purchases[i];
+    const cell = document.getElementById(`profit-${i}`);
+    if (cell) cell.textContent = fmt(calcRowShares(p).profit);
+    renderResults();
+  } else {
+    // desc 不影響任何計算，只需存資料
+    renderResults();
+  }
+}
+
+function renderPurchases(){
+  const active = document.activeElement;
+  const activeId = active && active.id;
+  const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+
+  const body = document.getElementById('purchaseBody');
+  body.innerHTML = purchases.map((p,i)=>{
+    if (!p.costs) p.costs = [0,0,0];
+    const isSplit = p.method === 'split';
+    const { profit, profitShare } = calcRowShares(p);
+
+    let ratioText;
+    if (isSplit){
+      const participantIdx = [0,1,2].filter(k=>p.participants[k]);
+      const n = participantIdx.length || 1;
+      ratioText = names.map((nm,ni)=>{
+        if (!p.participants[ni]) return `${nm} 未參與`;
+        return `${nm} 1/${n}`;
+      }).join(' ・ ');
+    } else {
+      const weights = calcWeights(p);
+      const sumW = weights.reduce((a,b)=>a+b,0) || 1;
+      ratioText = names.map((nm,ni)=>{
+        if (!p.participants[ni]) return `${nm} 未參與`;
+        return `${nm} ${weights[ni]}/${sumW}`;
+      }).join(' ・ ');
+    }
+
+    const checkboxes = names.map((n,ni)=>{
+      const isBuyer = !isSplit && ni === p.buyer;
+      const checked = p.participants[ni] ? 'checked' : '';
+      const disabled = isBuyer ? 'disabled' : '';
+      return `<label class="participant-chip ${isBuyer?'is-buyer':''}">
+        <input type="checkbox" ${checked} ${disabled} onchange="toggleParticipant(${i},${ni},this.checked)">
+        <span>${n}</span>
+      </label>`;
+    }).join('');
+
+    const costCell = isSplit
+      ? `<div class="split-cost-group">${names.map((n,ni)=>`
+          <label class="split-cost-row ${p.participants[ni]?'':'is-disabled'}">
+            <span>${n}</span>
+            <input type="number" id="cost-${i}-${ni}" value="${p.costs[ni]}" ${p.participants[ni]?'':'disabled'} oninput="updateSplitCost(${i},${ni},this.value)">
+          </label>`).join('')}</div>`
+      : `<input type="number" id="cost-${i}" value="${p.cost}" oninput="updatePurchase(${i},'cost',this.value)">`;
+
+    const buyerCell = isSplit
+      ? `<span class="muted-note">各自負責</span>`
+      : `<select onchange="updatePurchase(${i},'buyer',this.value)">
+          ${names.map((n,ni)=>`<option value="${ni}" ${p.buyer===ni?'selected':''}>${n}</option>`).join('')}
+        </select>`;
+
+    return `
+    <tr>
+      <td><input type="text" id="desc-${i}" value="${p.desc}" oninput="updatePurchase(${i},'desc',this.value)"></td>
+      <td><input type="number" id="amount-${i}" value="${p.amount}" oninput="updatePurchase(${i},'amount',this.value)"></td>
+      <td>${costCell}</td>
+      <td>
+        <select onchange="updatePurchase(${i},'method',this.value)">
+          <option value="online" ${p.method==='online'?'selected':''}>線上採購</option>
+          <option value="offline" ${p.method==='offline'?'selected':''}>線下採購</option>
+          <option value="split" ${p.method==='split'?'selected':''}>搶購・各自負擔</option>
+        </select>
+      </td>
+      <td>${buyerCell}</td>
+      <td><div class="participant-group">${checkboxes}</div></td>
+      <td class="profit-cell ${isSplit?'method-split':(p.method==='online'?'method-online':'method-offline')}" id="profit-${i}">${fmt(profit)}</td>
+      <td style="font-size:11px; color:var(--ink-soft); line-height:1.6;">${ratioText}</td>
+      <td><button class="del-btn" onclick="removePurchase(${i})" title="刪除">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  if (activeId){
+    const el = document.getElementById(activeId);
+    if (el){
+      el.focus();
+      if (selStart !== null && el.setSelectionRange){
+        try { el.setSelectionRange(selStart, selEnd); } catch(e) {}
+      }
+    }
+  }
+}
+
+let shippingItems = [
+  { desc:'國際運費', amount:0, payer:2 },
+  { desc:'雜項支出（包材等）', amount:0, payer:2 }
+];
+
+// 抓出「採購紀錄」中，只要參與過任一筆的人，就算這批有參與，需要分攤運費雜項
+function getPurchaseParticipants(){
+  const involved = [false,false,false];
+  purchases.forEach(p=>{
+    for (let i=0;i<3;i++){
+      if (p.participants[i]) involved[i] = true;
+    }
+  });
+  if (!involved.some(Boolean)) return [true,true,true]; // 還沒有任何採購紀錄時，預設三人均分
+  return involved;
+}
+
+function calcShippingShares(item){
+  const involved = getPurchaseParticipants();
+  involved[item.payer] = true; // 代墊人一定也算參與分攤
+  const participantIdx = [0,1,2].filter(i => involved[i]);
+  const n = participantIdx.length || 1;
+  const perPerson = (item.amount||0) / n;
+  return { perPerson, participantIdx, involved };
+}
+
+function updateShippingAmount(idx, value){
+  shippingItems[idx].amount = parseFloat(value) || 0;
+  renderShippingPer(idx);
+  renderResults();
+}
+function updateShippingPayer(idx, value){
+  shippingItems[idx].payer = parseInt(value);
+  renderShippingItems();
+  renderResults();
+}
+function renderShippingPer(idx){
+  const item = shippingItems[idx];
+  const { perPerson, participantIdx } = calcShippingShares(item);
+  const cell = document.getElementById(`ship-per-${idx}`);
+  if (cell) cell.textContent = `${fmt(perPerson)} ／人（${participantIdx.length}人）`;
+}
+
+function renderShippingItems(){
+  const active = document.activeElement;
+  const activeId = active && active.id;
+  const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+
+  const body = document.getElementById('shippingBody');
+  body.innerHTML = shippingItems.map((item, idx)=>{
+    const { perPerson, participantIdx, involved } = calcShippingShares(item);
+    const badges = names.map((n,ni)=>
+      `<span class="participant-badge ${involved[ni] ? 'on' : 'off'}">${n}</span>`
+    ).join('');
+    return `
+    <tr>
+      <td>${item.desc}</td>
+      <td><input type="number" id="ship-amount-${idx}" value="${item.amount}" oninput="updateShippingAmount(${idx},this.value)"></td>
+      <td>
+        <select onchange="updateShippingPayer(${idx},this.value)">
+          ${names.map((n,ni)=>`<option value="${ni}" ${item.payer===ni?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </td>
+      <td><div class="participant-group">${badges}</div></td>
+      <td class="profit-cell" id="ship-per-${idx}">${fmt(perPerson)} ／人（${participantIdx.length}人）</td>
+    </tr>`;
+  }).join('');
+
+  if (activeId){
+    const el = document.getElementById(activeId);
+    if (el){
+      el.focus();
+      if (selStart !== null && el.setSelectionRange){
+        try { el.setSelectionRange(selStart, selEnd); } catch(e) {}
+      }
+    }
+  }
+}
+
+function computeResults(){
+  const profitShare = [0,0,0];
+  const advanced = [0,0,0];
+  const shipDeduct = [0,0,0];
+  const shipReimburse = [0,0,0];
+  let totalAmount = 0;
+
+  purchases.forEach(p=>{
+    const { profitShare: rowShare, advanced: rowAdvanced } = calcRowShares(p);
+    for (let i=0;i<3;i++){
+      profitShare[i] += rowShare[i];
+      advanced[i] += rowAdvanced[i];
+    }
+    totalAmount += (p.amount||0);
+  });
+
+  shippingItems.forEach(item=>{
+    const { perPerson, participantIdx } = calcShippingShares(item);
+    participantIdx.forEach(i=>{ shipDeduct[i] += perPerson; });
+    shipReimburse[item.payer] += (item.amount||0);
+  });
+
+  const finalTake = [0,1,2].map(i =>
+    profitShare[i] - shipDeduct[i] + advanced[i] + shipReimburse[i]
+  );
+  return { profitShare, advanced, shipDeduct, shipReimburse, finalTake, totalAmount };
+}
+
+function renderResults(){
+  const { profitShare, advanced, shipDeduct, shipReimburse, finalTake, totalAmount } = computeResults();
+
+  const cards = document.getElementById('resultCards');
+  cards.innerHTML = names.map((n,i)=>{
+    const shipDeductLine = shipDeduct[i] > 0
+      ? `<div class="line"><span>− 運費雜項分攤</span><span>−${fmt(shipDeduct[i])}</span></div>`
+      : `<div class="line"><span>運費雜項分攤</span><span>未參與，免分攤</span></div>`;
+    const shipReimburseLine = shipReimburse[i] > 0
+      ? `<div class="line"><span>+ 運費雜項代墊歸還</span><span>+${fmt(shipReimburse[i])}</span></div>`
+      : ``;
+    return `
+    <div class="result-card">
+      <h3>${n}</h3>
+      <div class="line"><span>分潤加總</span><span>${fmt(profitShare[i])}</span></div>
+      ${shipDeductLine}
+      <div class="line"><span>+ 代墊採購成本歸還</span><span>+${fmt(advanced[i])}</span></div>
+      ${shipReimburseLine}
+      <div class="final-line">
+        <span class="label">最終實拿</span>
+        <span class="val">${fmt(finalTake[i])}</span>
+      </div>
+    </div>
+  `;}).join('');
+
+  const sumFinal = finalTake.reduce((a,b)=>a+b,0);
+  const expected = totalAmount; // 運費雜項各自依代墊人全額歸還，故三人實拿加總 = 收款總額
+  const diff = Math.abs(sumFinal - expected);
+  const el = document.getElementById('checkVal');
+  el.textContent = `${fmt(sumFinal)} / 應為 ${fmt(expected)}`;
+  el.className = 'val ' + (diff < 0.01 ? 'ok' : 'bad');
+}
+
+function render(){
+  renderPurchases();
+  renderShippingItems();
+  renderResults();
+}
+render();
+</script>
+</body>
+</html>
