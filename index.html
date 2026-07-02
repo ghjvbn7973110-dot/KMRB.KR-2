@@ -147,7 +147,7 @@
     background:var(--card);
     overflow:hidden;
   }
-  table.purchase-table{ min-width:820px; }
+  table.purchase-table{ min-width:880px; }
   table.shipping-table{ min-width:600px; }
   .scroll-hint{
     display:none;
@@ -191,6 +191,7 @@
   }
   select{
     width:100%;
+    min-width:92px;
     border:1px solid var(--paper-line);
     background:#fff;
     font-family:'Noto Sans TC',sans-serif;
@@ -450,15 +451,15 @@
     <table class="purchase-table">
       <thead>
         <tr>
-          <th style="width:10%">項目</th>
+          <th style="width:8%">項目</th>
           <th style="width:11%">收款總額</th>
           <th style="width:16%">採購成本</th>
           <th style="width:14%">方式</th>
-          <th style="width:8%">負責人</th>
+          <th style="width:12%">負責人</th>
           <th style="width:14%">參與者</th>
-          <th style="width:10%">利潤</th>
-          <th style="width:13%">分潤比例</th>
-          <th style="width:4%"></th>
+          <th style="width:9%">利潤</th>
+          <th style="width:11%">分潤比例</th>
+          <th style="width:5%"></th>
         </tr>
       </thead>
       <tbody id="purchaseBody"></tbody>
