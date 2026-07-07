@@ -6,6 +6,7 @@
 <title>KMRB.KR分潤帳本</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --paper:#FAF6EC;
@@ -39,6 +40,22 @@
     border-bottom:3px solid var(--ink);
     padding-bottom:18px;
     margin-bottom:8px;
+  }
+  .export-btn{
+    background:var(--stamp);
+    color:#fff;
+    border:none;
+    font-family:'Noto Sans TC', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    padding:10px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .export-btn:hover{
+    background:#9c3b28;
   }
   h1{
     font-family:'Noto Serif TC', serif;
@@ -422,6 +439,7 @@
   @media (max-width:720px){
     .names-row, .ship-grid, .result-cards{grid-template-columns:1fr;}
     header{flex-direction:column; align-items:flex-start; gap:10px;}
+    .export-btn{width:100%; text-align:center;}
     body{padding:28px 12px 100px;}
     .scroll-hint{display:block;}
   }
@@ -434,6 +452,7 @@
     <div>
       <h1>KMRB.KR分潤帳本</h1>
     </div>
+    <button class="export-btn" onclick="exportToExcel()">📥 匯出 Excel</button>
   </header>
 
   <div class="names-row" id="namesRow">
@@ -839,6 +858,102 @@ function renderResults(){
   const el = document.getElementById('checkVal');
   el.textContent = `${fmt(sumFinal)} / 應為 ${fmt(expected)}`;
   el.className = 'val ' + (diff < 0.01 ? 'ok' : 'bad');
+}
+
+function round2(n){ return Math.round((n||0) * 100) / 100; }
+
+function methodLabel(m){
+  if (m === 'online') return '線上採購';
+  if (m === 'offline') return '線下採購';
+  return '搶購・各自負擔';
+}
+
+function exportToExcel(){
+  if (typeof XLSX === 'undefined'){
+    alert('Excel 匯出功能載入失敗，請確認網路連線後重新整理頁面再試一次。');
+    return;
+  }
+
+  const rows = [];
+
+  // 區塊 1：採購紀錄
+  rows.push(['採購紀錄']);
+  rows.push(['項目','收款總額','方式','負責人','參與者','帕尼成本','妮妮成本','立文成本','利潤','帕尼分潤','妮妮分潤','立文分潤']);
+  purchases.forEach(p=>{
+    const { profit, profitShare } = calcRowShares(p);
+    const participantsText = names.filter((n,i)=>p.participants[i]).join('、');
+    let costsRow = [0,0,0];
+    if (p.method === 'split'){
+      costsRow = [p.costs[0]||0, p.costs[1]||0, p.costs[2]||0];
+    } else {
+      costsRow[p.buyer] = p.cost || 0;
+    }
+    rows.push([
+      p.desc,
+      p.amount || 0,
+      methodLabel(p.method),
+      p.method === 'split' ? '各自負責' : names[p.buyer],
+      participantsText,
+      costsRow[0], costsRow[1], costsRow[2],
+      round2(profit),
+      round2(profitShare[0]), round2(profitShare[1]), round2(profitShare[2])
+    ]);
+  });
+
+  rows.push([]);
+
+  // 區塊 2：國際運費與雜項
+  rows.push(['國際運費與雜項']);
+  rows.push(['項目','金額','代墊人','分攤名單','每人分攤']);
+  shippingItems.forEach(item=>{
+    const { perPerson, participantIdx } = calcShippingShares(item);
+    rows.push([
+      item.desc,
+      item.amount || 0,
+      names[item.payer],
+      participantIdx.map(i=>names[i]).join('、'),
+      round2(perPerson)
+    ]);
+  });
+
+  rows.push([]);
+
+  // 區塊 3：最終結算
+  rows.push(['最終結算']);
+  rows.push(['姓名','分潤加總','運費雜項分攤','代墊採購成本歸還','運費雜項代墊歸還','最終實拿']);
+  const { profitShare, advanced, shipDeduct, shipReimburse, finalTake } = computeResults();
+  names.forEach((n,i)=>{
+    rows.push([
+      n,
+      round2(profitShare[i]),
+      round2(-shipDeduct[i]),
+      round2(advanced[i]),
+      round2(shipReimburse[i]),
+      round2(finalTake[i])
+    ]);
+  });
+  rows.push([
+    '合計',
+    round2(profitShare.reduce((a,b)=>a+b,0)),
+    round2(-shipDeduct.reduce((a,b)=>a+b,0)),
+    round2(advanced.reduce((a,b)=>a+b,0)),
+    round2(shipReimburse.reduce((a,b)=>a+b,0)),
+    round2(finalTake.reduce((a,b)=>a+b,0))
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+    { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '分潤帳本');
+
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb, `KMRB分潤帳本_${dateStr}.xlsx`);
 }
 
 function render(){
