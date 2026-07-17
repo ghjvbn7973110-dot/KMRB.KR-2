@@ -164,7 +164,7 @@
     background:var(--card);
     overflow:hidden;
   }
-  table.purchase-table{ min-width:900px; }
+  table.purchase-table{ min-width:820px; }
   table.shipping-table{ min-width:600px; }
   .scroll-hint{
     display:none;
@@ -219,37 +219,65 @@
     border-radius:6px;
     outline:none;
   }
-  .method-online{color:var(--seal);}
-  .method-offline{color:var(--stamp);}
-  .method-split{color:#8A6A2E;}
-  .split-cost-group{
+  .share-group{
     display:flex;
     flex-direction:column;
     gap:3px;
   }
-  .split-cost-row{
+  .share-row{
     display:flex;
     align-items:center;
-    gap:6px;
+    justify-content:space-between;
+    gap:8px;
   }
-  .split-cost-row span{
-    font-size:11px;
-    color:var(--ink-soft);
-    width:32px;
+  .share-check{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:12px;
+    color:var(--ink);
+    cursor:pointer;
     flex-shrink:0;
+    width:56px;
   }
-  .split-cost-row input{
+  .share-check input[type=checkbox]{
+    width:14px;
+    accent-color:var(--stamp);
+    cursor:pointer;
+  }
+  .share-row.is-disabled .share-check{
+    color:var(--ink-soft);
+    opacity:.5;
+  }
+  .share-input{
+    width:56px;
+    min-width:56px;
     padding:4px 6px;
     font-size:12.5px;
+    text-align:right;
   }
-  .split-cost-row.is-disabled span,
-  .split-cost-row.is-disabled input{
+  .share-row.is-disabled .share-input{
     opacity:.35;
   }
-  .muted-note{
-    font-size:12px;
-    color:var(--ink-soft);
-    font-style:italic;
+  .share-sum{
+    margin-top:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    font-weight:700;
+    text-align:right;
+  }
+  .share-sum.ok{color:var(--seal);}
+  .share-sum.bad{color:var(--stamp);}
+  .share-warning{
+    background:var(--stamp-soft);
+    border:1.5px solid var(--stamp);
+    color:#7a2d1d;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12.5px;
+    font-weight:600;
+    line-height:1.6;
+    margin:-4px 0 14px;
   }
   .profit-cell{
     font-family:'IBM Plex Mono',monospace;
@@ -361,6 +389,36 @@
     color:var(--seal);
   }
 
+  .note-box{
+    margin-top:14px;
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .note-box label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:.5px;
+  }
+  .note-box textarea{
+    width:100%;
+    border:1px solid var(--paper-line);
+    border-radius:8px;
+    background:#fff;
+    font-family:'Noto Sans TC',sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+    padding:8px 10px;
+    resize:vertical;
+    outline:none;
+  }
+  .note-box textarea:focus{
+    border-color:var(--stamp);
+  }
+
   .result-cards{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -466,19 +524,18 @@
       <span class="eyebrow">01</span>
       <h2>採購紀錄</h2>
     </div>
-    <p class="hint">每一筆團務：填收款總額、採購成本（墊付）、方式、負責人。若這筆不是三人都參與，取消勾選「參與者」即可，系統會依實際參與人數套用固定比例——3人：線上 4:3:3／線下 6:2:2；2人：線上 5:5／線下 6:4；只有負責人自己：全拿。「搶購・各自負擔」則是每人自己買自己出錢，成本個別填寫，利潤直接均分給有參與的人。負責人一定視為參與者（搶購模式沒有負責人限制）。</p>
+    <p class="hint">每一筆團務：填收款總額、採購成本（墊付）、負責人（代墊成本的人）。勾選這筆有誰參與，再自訂每個參與者要分到幾成利潤——輸入的數字是「幾/10」，例如 4、3、3，加總要等於 10。系統不會限制你怎麼分，加總不是 10 時欄位會標示提醒。</p>
+    <div class="share-warning" id="shareWarningBanner" style="display:none;"></div>
     <div class="table-scroll">
     <table class="purchase-table">
       <thead>
         <tr>
           <th style="width:11%">項目</th>
-          <th style="width:11%">收款總額</th>
-          <th style="width:16%">採購成本</th>
-          <th style="width:14%">方式</th>
-          <th style="width:12%">負責人</th>
-          <th style="width:14%">參與者</th>
+          <th style="width:12%">收款總額</th>
+          <th style="width:15%">採購成本</th>
+          <th style="width:11%">負責人</th>
+          <th style="width:38%">參與者與分潤（滿 10）</th>
           <th style="width:8%">利潤</th>
-          <th style="width:9%">分潤比例</th>
           <th style="width:5%"></th>
         </tr>
       </thead>
@@ -499,17 +556,21 @@
     <table class="shipping-table">
       <thead>
         <tr>
-          <th style="width:26%">項目</th>
-          <th style="width:18%">金額</th>
-          <th style="width:16%">代墊人</th>
-          <th style="width:24%">分攤名單（依採購紀錄）</th>
-          <th style="width:16%">每人分攤</th>
+          <th style="width:20%">項目</th>
+          <th style="width:14%">金額</th>
+          <th style="width:14%">代墊人</th>
+          <th style="width:22%">分攤名單（依採購紀錄）</th>
+          <th style="width:14%">每人分攤</th>
         </tr>
       </thead>
       <tbody id="shippingBody"></tbody>
     </table>
     </div>
     <p class="scroll-hint">← 表格內容較多，手機請左右滑動查看完整欄位 →</p>
+    <div class="note-box">
+      <label for="shippingNoteInput">備註</label>
+      <textarea id="shippingNoteInput" rows="2" placeholder="這裡填整批的備註，例如物流單號、特殊狀況說明…" oninput="updateShippingNote(this.value)"></textarea>
+    </div>
   </section>
 
   <section>
@@ -528,48 +589,20 @@
 </div>
 
 <script>
-const RATIO_TABLE = {
-  online:  { 1:{buyer:1, other:0}, 2:{buyer:5, other:5}, 3:{buyer:4, other:3} },
-  offline: { 1:{buyer:1, other:0}, 2:{buyer:6, other:4}, 3:{buyer:6, other:2} }
-};
 const names = ['帕尼','妮妮','立文'];
 let purchases = [
-  { desc:'第一批', amount:0, cost:0, method:'online', buyer:0, participants:[true,true,true], costs:[0,0,0] }
+  { desc:'第一批', amount:0, cost:0, buyer:0, participants:[true,true,true], shares:[4,3,3] }
 ];
 
-function calcWeights(p){
-  const weights = [0,0,0];
-  const count = p.participants.filter(Boolean).length;
-  const rule = (RATIO_TABLE[p.method] && RATIO_TABLE[p.method][count]) || RATIO_TABLE[p.method][3];
-  for (let i=0;i<3;i++){
-    if (!p.participants[i]) continue;
-    weights[i] = (i === p.buyer) ? rule.buyer : rule.other;
-  }
-  return weights;
-}
-
-// 計算單筆採購紀錄的：利潤、每人分潤、每人應歸還的代墊成本
+// 計算單筆採購紀錄的：利潤、每人分潤（依自訂 shares，滿分10）、每人應歸還的代墊成本
 function calcRowShares(p){
   const profitShare = [0,0,0];
   const advanced = [0,0,0];
-
-  if (p.method === 'split'){
-    // 各自搶購：自己買的東西自己出錢，利潤直接均分給有參與的人
-    const participantIdx = [0,1,2].filter(i => p.participants[i]);
-    const costSum = participantIdx.reduce((s,i) => s + (p.costs[i]||0), 0);
-    const profit = (p.amount||0) - costSum;
-    const n = participantIdx.length || 1;
-    participantIdx.forEach(i=>{
-      profitShare[i] = profit / n;
-      advanced[i] = (p.costs[i]||0);
-    });
-    return { profit, profitShare, advanced };
-  }
-
-  const weights = calcWeights(p);
-  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
   const profit = (p.amount||0) - (p.cost||0);
-  for (let i=0;i<3;i++){ profitShare[i] = profit * weights[i] / sumW; }
+  for (let i=0;i<3;i++){
+    if (!p.participants[i]) continue;
+    profitShare[i] = profit * (p.shares[i]||0) / 10;
+  }
   advanced[p.buyer] = (p.cost||0);
   return { profit, profitShare, advanced };
 }
@@ -579,8 +612,30 @@ function fmt(n){
   return n.toLocaleString('zh-Hant-TW', {maximumFractionDigits:2});
 }
 
+function rowShareSum(p){
+  return [0,1,2].reduce((s,k)=> s + (p.participants[k] ? (p.shares[k]||0) : 0), 0);
+}
+function getInvalidRows(){
+  return purchases
+    .map((p,i)=>({ i, desc: p.desc, sum: rowShareSum(p) }))
+    .filter(r => Math.abs(r.sum - 10) > 0.001);
+}
+function renderShareWarning(){
+  const banner = document.getElementById('shareWarningBanner');
+  if (!banner) return;
+  const invalid = getInvalidRows();
+  if (invalid.length === 0){
+    banner.style.display = 'none';
+    banner.textContent = '';
+  } else {
+    banner.style.display = 'block';
+    banner.textContent = '⚠️ 以下項目分潤總和不是 10，請修正：' +
+      invalid.map(r => `「${r.desc}」目前合計 ${fmt(r.sum)}`).join('、');
+  }
+}
+
 function addPurchase(){
-  purchases.push({ desc:`第${purchases.length+1}批`, amount:0, cost:0, method:'online', buyer:0, participants:[true,true,true], costs:[0,0,0] });
+  purchases.push({ desc:`第${purchases.length+1}批`, amount:0, cost:0, buyer:0, participants:[true,true,true], shares:[4,3,3] });
   render();
 }
 function removePurchase(i){
@@ -589,23 +644,29 @@ function removePurchase(i){
 }
 function toggleParticipant(i, personIndex, checked){
   const p = purchases[i];
-  if (p.method !== 'split' && personIndex === p.buyer){
-    // 非搶購模式下，負責人一定要參與自己這筆採購
-    renderPurchases();
-    return;
-  }
   p.participants[personIndex] = checked;
+  if (!checked) p.shares[personIndex] = 0; // 取消參與時分潤歸零
   renderPurchases();
   renderShippingItems();
   renderResults();
 }
-function updateSplitCost(i, personIndex, value){
+function updateShare(i, personIndex, value){
   const p = purchases[i];
-  if (!p.costs) p.costs = [0,0,0];
-  p.costs[personIndex] = parseFloat(value) || 0;
+  p.shares[personIndex] = parseFloat(value) || 0;
   const cell = document.getElementById(`profit-${i}`);
   if (cell) cell.textContent = fmt(calcRowShares(p).profit);
+  renderShareSum(i);
+  renderShareWarning();
   renderResults();
+}
+function renderShareSum(i){
+  const p = purchases[i];
+  const sum = rowShareSum(p);
+  const el = document.getElementById(`share-sum-${i}`);
+  if (el){
+    el.textContent = `合計 ${fmt(sum)} / 10`;
+    el.className = 'share-sum ' + (Math.abs(sum-10) < 0.001 ? 'ok' : 'bad');
+  }
 }
 function updatePurchase(i, field, value){
   if (field==='amount' || field==='cost') value = parseFloat(value)||0;
@@ -613,13 +674,6 @@ function updatePurchase(i, field, value){
   purchases[i][field] = value;
 
   if (field==='buyer'){
-    // 負責人一定視為參與者
-    purchases[i].participants[value] = true;
-    renderPurchases();
-    renderShippingItems();
-    renderResults();
-  } else if (field==='method'){
-    if (!purchases[i].costs) purchases[i].costs = [0,0,0];
     renderPurchases();
     renderShippingItems();
     renderResults();
@@ -643,67 +697,36 @@ function renderPurchases(){
 
   const body = document.getElementById('purchaseBody');
   body.innerHTML = purchases.map((p,i)=>{
-    if (!p.costs) p.costs = [0,0,0];
-    const isSplit = p.method === 'split';
-    const { profit, profitShare } = calcRowShares(p);
+    const { profit } = calcRowShares(p);
+    const shareSum = rowShareSum(p);
 
-    let ratioText;
-    if (isSplit){
-      const participantIdx = [0,1,2].filter(k=>p.participants[k]);
-      const n = participantIdx.length || 1;
-      ratioText = names.map((nm,ni)=>{
-        if (!p.participants[ni]) return `${nm} 未參與`;
-        return `${nm} 1/${n}`;
-      }).join(' ・ ');
-    } else {
-      const weights = calcWeights(p);
-      const sumW = weights.reduce((a,b)=>a+b,0) || 1;
-      ratioText = names.map((nm,ni)=>{
-        if (!p.participants[ni]) return `${nm} 未參與`;
-        return `${nm} ${weights[ni]}/${sumW}`;
-      }).join(' ・ ');
-    }
-
-    const checkboxes = names.map((n,ni)=>{
-      const isBuyer = !isSplit && ni === p.buyer;
+    const participantRows = names.map((n,ni)=>{
       const checked = p.participants[ni] ? 'checked' : '';
-      const disabled = isBuyer ? 'disabled' : '';
-      return `<label class="participant-chip ${isBuyer?'is-buyer':''}">
-        <input type="checkbox" ${checked} ${disabled} onchange="toggleParticipant(${i},${ni},this.checked)">
-        <span>${n}</span>
-      </label>`;
+      const disabled = p.participants[ni] ? '' : 'disabled';
+      return `<div class="share-row ${p.participants[ni]?'':'is-disabled'}">
+        <label class="share-check">
+          <input type="checkbox" ${checked} onchange="toggleParticipant(${i},${ni},this.checked)">
+          <span>${n}</span>
+        </label>
+        <input type="number" class="share-input" id="share-${i}-${ni}" value="${p.shares[ni]||0}" step="0.5" ${disabled} oninput="updateShare(${i},${ni},this.value)">
+      </div>`;
     }).join('');
-
-    const costCell = isSplit
-      ? `<div class="split-cost-group">${names.map((n,ni)=>`
-          <label class="split-cost-row ${p.participants[ni]?'':'is-disabled'}">
-            <span>${n}</span>
-            <input type="number" id="cost-${i}-${ni}" value="${p.costs[ni]}" ${p.participants[ni]?'':'disabled'} oninput="updateSplitCost(${i},${ni},this.value)">
-          </label>`).join('')}</div>`
-      : `<input type="number" id="cost-${i}" value="${p.cost}" oninput="updatePurchase(${i},'cost',this.value)">`;
-
-    const buyerCell = isSplit
-      ? `<span class="muted-note">各自負責</span>`
-      : `<select onchange="updatePurchase(${i},'buyer',this.value)">
-          ${names.map((n,ni)=>`<option value="${ni}" ${p.buyer===ni?'selected':''}>${n}</option>`).join('')}
-        </select>`;
 
     return `
     <tr>
       <td><input type="text" id="desc-${i}" value="${p.desc}" oninput="updatePurchase(${i},'desc',this.value)"></td>
       <td><input type="number" id="amount-${i}" value="${p.amount}" oninput="updatePurchase(${i},'amount',this.value)"></td>
-      <td>${costCell}</td>
+      <td><input type="number" id="cost-${i}" value="${p.cost}" oninput="updatePurchase(${i},'cost',this.value)"></td>
       <td>
-        <select onchange="updatePurchase(${i},'method',this.value)">
-          <option value="online" ${p.method==='online'?'selected':''}>線上採購</option>
-          <option value="offline" ${p.method==='offline'?'selected':''}>線下採購</option>
-          <option value="split" ${p.method==='split'?'selected':''}>搶購・各自負擔</option>
+        <select onchange="updatePurchase(${i},'buyer',this.value)">
+          ${names.map((n,ni)=>`<option value="${ni}" ${p.buyer===ni?'selected':''}>${n}</option>`).join('')}
         </select>
       </td>
-      <td>${buyerCell}</td>
-      <td><div class="participant-group">${checkboxes}</div></td>
-      <td class="profit-cell ${isSplit?'method-split':(p.method==='online'?'method-online':'method-offline')}" id="profit-${i}">${fmt(profit)}</td>
-      <td style="font-size:11px; color:var(--ink-soft); line-height:1.6;">${ratioText}</td>
+      <td>
+        <div class="share-group">${participantRows}</div>
+        <div class="share-sum ${Math.abs(shareSum-10)<0.001?'ok':'bad'}" id="share-sum-${i}">合計 ${fmt(shareSum)} / 10</div>
+      </td>
+      <td class="profit-cell" id="profit-${i}">${fmt(profit)}</td>
       <td><button class="del-btn" onclick="removePurchase(${i})" title="刪除">✕</button></td>
     </tr>`;
   }).join('');
@@ -717,12 +740,17 @@ function renderPurchases(){
       }
     }
   }
+  renderShareWarning();
 }
 
 let shippingItems = [
   { desc:'國際運費', amount:0, payer:2 },
   { desc:'雜項支出（包材等）', amount:0, payer:2 }
 ];
+let shippingNote = '';
+function updateShippingNote(value){
+  shippingNote = value;
+}
 
 // 抓出「採購紀錄」中，只要參與過任一筆的人，就算這批有參與，需要分攤運費雜項
 function getPurchaseParticipants(){
@@ -862,15 +890,18 @@ function renderResults(){
 
 function round2(n){ return Math.round((n||0) * 100) / 100; }
 
-function methodLabel(m){
-  if (m === 'online') return '線上採購';
-  if (m === 'offline') return '線下採購';
-  return '搶購・各自負擔';
-}
-
 function exportToExcel(){
   if (typeof XLSX === 'undefined'){
     alert('Excel 匯出功能載入失敗，請確認網路連線後重新整理頁面再試一次。');
+    return;
+  }
+
+  const invalid = getInvalidRows();
+  if (invalid.length > 0){
+    alert(
+      '⚠️ 無法匯出：以下項目的分潤總和不是 10，請先修正再匯出：\n\n' +
+      invalid.map(r => `・${r.desc}　目前合計 ${fmt(r.sum)} / 10`).join('\n')
+    );
     return;
   }
 
@@ -878,23 +909,19 @@ function exportToExcel(){
 
   // 區塊 1：採購紀錄
   rows.push(['採購紀錄']);
-  rows.push(['項目','收款總額','方式','負責人','參與者','帕尼成本','妮妮成本','立文成本','利潤','帕尼分潤','妮妮分潤','立文分潤']);
+  rows.push(['項目','收款總額','採購成本','負責人','參與者','帕尼分潤%','妮妮分潤%','立文分潤%','利潤','帕尼分潤','妮妮分潤','立文分潤']);
   purchases.forEach(p=>{
     const { profit, profitShare } = calcRowShares(p);
     const participantsText = names.filter((n,i)=>p.participants[i]).join('、');
-    let costsRow = [0,0,0];
-    if (p.method === 'split'){
-      costsRow = [p.costs[0]||0, p.costs[1]||0, p.costs[2]||0];
-    } else {
-      costsRow[p.buyer] = p.cost || 0;
-    }
     rows.push([
       p.desc,
       p.amount || 0,
-      methodLabel(p.method),
-      p.method === 'split' ? '各自負責' : names[p.buyer],
+      p.cost || 0,
+      names[p.buyer],
       participantsText,
-      costsRow[0], costsRow[1], costsRow[2],
+      p.participants[0] ? (p.shares[0]||0) : 0,
+      p.participants[1] ? (p.shares[1]||0) : 0,
+      p.participants[2] ? (p.shares[2]||0) : 0,
       round2(profit),
       round2(profitShare[0]), round2(profitShare[1]), round2(profitShare[2])
     ]);
@@ -915,6 +942,7 @@ function exportToExcel(){
       round2(perPerson)
     ]);
   });
+  rows.push(['備註', shippingNote || '']);
 
   rows.push([]);
 
